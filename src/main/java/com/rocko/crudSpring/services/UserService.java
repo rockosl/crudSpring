@@ -5,13 +5,14 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Service;
 
 import com.rocko.crudSpring.entities.User;
 import com.rocko.crudSpring.repositories.UserRepository;
 import com.rocko.crudSpring.services.exceptions.DatabaseException;
 import com.rocko.crudSpring.services.exceptions.ResourceNotFoundException;
+
+import jakarta.persistence.EntityNotFoundException;
 
 @Service
 public class UserService {
@@ -41,9 +42,13 @@ public class UserService {
     }
 
     public User update(Long id, User obj) {
-        User entity = repository.getReferenceById(id);
-        updateData(entity, obj);
-        return repository.save(entity);
+        try {
+            User entity = repository.getReferenceById(id);
+            updateData(entity, obj);
+            return repository.save(entity);
+        } catch (EntityNotFoundException e) {
+            throw new DatabaseException(e.getMessage());
+        }
     }
 
     private void updateData(User entity, User obj) {
